@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Anli 3rd, 14th together?</title>
+<style>
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-image: url("heart.png"); /* change your background PNG here */
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    background: white;
+    padding: 35px 45px;
+    border-radius: 22px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    z-index: 2;
+    position: relative;
+}
+
+.gif {
+    width: 200px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+h1 {
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+button {
+    font-size: 18px;
+    padding: 12px 25px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.yes {
+    background-color: #ff4d6d;
+    color: white;
+}
+
+.no {
+    background-color: #cccccc;
+    color: black;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.heart {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: red;
+    transform: rotate(-45deg);
+    animation: floatHeart 1s ease-out forwards;
+    z-index: 3;
+}
+
+.heart::before,
+.heart::after {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: red;
+    border-radius: 50%;
+}
+
+.heart::before { top: -7px; left: 0; }
+.heart::after { top: 0; left: 7px; }
+
+@keyframes floatHeart {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-50px) translateX(var(--randX)) scale(0.8); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- Audio that plays after Yes click -->
+<audio id="yippeeSound" src="yipeee.mp3"></audio>
+
+<div class="container">
+    <!-- Main GIF -->
+    <img id="mainGif" src="askgif.gif" class="gif" alt="Cute gif">
+    
+    <!-- Main text -->
+    <h1 id="mainText">Will you be my Valentine?</h1>
+
+    <!-- Buttons -->
+    <button id="btnA" class="yes">Yes 💖</button> <!-- Change text here -->
+    <button id="btnB" class="no">No</button>      <!-- Change text here -->
+</div>
+
+<script>
+const link = "https://www.canva.com/design/DAG-5n4u2WY/Wnf6qjfTlevXcj8N8yBgtw/watch?utm_content=DAG-5n4u2WY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h8d45c9f3c1"; //WHERE THE LINK OPENS AFTER PRESSING YES
+const sound = document.getElementById("yippeeSound");
+const btnA = document.getElementById("btnA");
+const btnB = document.getElementById("btnB");
+const mainText = document.getElementById("mainText");
+const mainGif = document.getElementById("mainGif");
+
+let phase = 1;
+let noClicks = 0;
+let totalNoPresses = 0;
+let celebrating = false;
+
+// Track current main GIF and Yes button
+let currentMainGif = "askgif.gif";
+let currentYesButton = btnA;
+
+// GIFs
+const noGifs = ["no1.gif","no2.gif","no3.gif","no4.gif","no5.gif","no6.gif","no7.gif"];
+const hoverYesGif = "pressyes.gif";
+const hoverNoGif = "hoveringatno.gif";
+const yesClickedGif = "shesaidyes.gif";
+
+// Text changes for No button
+const texts = ["sure na sure ka jan?","Talaga ba?","d nga..😢"]; //WHERE THE NO BUTTONS CHANGES
+
+// Floating hearts on Yes hover
+function spawnHearts(btn) {
+    for(let i=0;i<3;i++){
+        const heart = document.createElement("div");
+        heart.className="heart";
+        const rect = btn.getBoundingClientRect();
+        heart.style.left = `${rect.left + rect.width/2 + (Math.random()*20-10)}px`;
+        heart.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+        heart.style.setProperty('--randX', `${Math.random()*40-20}px`);
+        document.body.appendChild(heart);
+        setTimeout(()=>heart.remove(),1000);
+    }
+}
+
+// Bounce current Yes button
+function bounceYes() {
+    if(currentYesButton){
+        currentYesButton.style.animation="bounce 0.5s";
+        currentYesButton.addEventListener("animationend",()=>currentYesButton.style.animation="");
+    }
+}
+
+// Grow No button
+function grow(btn,count){
+    btn.style.fontSize = (18 + count*6) + "px";
+    btn.style.padding = (12 + count*4) + "px";
+}
+
+// Set button functions
+function setYes(btn){
+    btn.textContent="Yes 💖";
+    btn.className="yes";
+    currentYesButton = btn;
+}
+function setNo(btn,text="No"){btn.textContent=text; btn.className="no";}
+
+// --- Handle Yes click ---
+function handleYes(btn) {
+    if(celebrating) return;
+    celebrating = true;
+
+    // Hide clicked Yes button
+    btn.style.display = "none";
+
+    // Remove any remaining No buttons
+    const noButtons = document.querySelectorAll(".no");
+    noButtons.forEach(b => b.remove());
+
+    // Change main text and GIF
+    mainText.textContent = "Yipeeee!"; //THE TEXT AFTER PRESSING YES CHANGE HERE YES
+    currentMainGif = yesClickedGif;
+    mainGif.src = currentMainGif;
+
+    // Play sound
+    sound.currentTime = 0;
+    sound.play();
+
+    // Open link after 2 seconds
+    setTimeout(()=>window.open(link,"_self"),2000); //WHERE THE LINK OPENS AFTER PRESSING YES, _Self changes tab, _blank opens new tab
+}
+
+// --- Handle No click ---
+function handleNo(btn, otherBtn, maxClicks){
+    noClicks++;
+    totalNoPresses++;
+    grow(btn,noClicks);
+
+    // Bounce only the current Yes button
+    if(currentYesButton && currentYesButton !== btn){
+        bounceYes();
+    }
+
+    // Change main GIF for No clicks
+    const gifIndex = Math.min(totalNoPresses-1, noGifs.length-1);
+    currentMainGif = noGifs[gifIndex];
+    mainGif.src = currentMainGif;
+
+    if(noClicks < maxClicks){
+        btn.textContent = texts[Math.min(noClicks-1, texts.length-1)];
+        return;
+    }
+
+    // Swap logic
+    if(phase===1){
+        setYes(btn);          // old No → Yes
+        setNo(otherBtn);       // old Yes → No
+        currentYesButton = btn; // update current Yes
+        phase = 2;
+        noClicks = 0;
+    } else {
+        otherBtn.remove();    // remove extra No button
+        setYes(btn);
+        currentYesButton = btn; // update current Yes
+    }
+}
+
+// --- Button click events ---
+btnA.onclick = ()=>{
+    if(btnA.classList.contains("yes")) handleYes(btnA);
+    else handleNo(btnA, btnB, 3);
+};
+btnB.onclick = ()=>{
+    if(btnB.classList.contains("yes")) handleYes(btnB);
+    else handleNo(btnB, btnA, phase===1?4:3);
+};
+
+// --- Hover effects ---
+[btnA,btnB].forEach(btn=>{
+    btn.addEventListener("mouseenter",()=>{
+        if(btn.classList.contains("yes")){
+            spawnHearts(btn);
+            mainGif.src = hoverYesGif;
+        } else if(btn.classList.contains("no")){
+            btn.style.animation="shake 0.3s";
+            if(totalNoPresses === 0){
+                mainGif.src = hoverNoGif;
+            }
+        }
+    });
+
+    btn.addEventListener("mouseleave",()=>{
+        mainGif.src = currentMainGif;
+    });
+
+    btn.addEventListener("animationend",()=>{btn.style.animation="";});
+});
+</script>
+
+</body>
+</html>
